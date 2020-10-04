@@ -1,4 +1,15 @@
 
-WasEngine/WasEngine.vcxproj
-WasEngine/WasEngine.vcxproj.filters
-WasEngine/WasEngine.vcxproj.user
+.vs/WasEngine/v16/ipch/AutoPCH/9ef6f6dc204496a0/STDAFX.ipch
+.vs/WasEngine/v16/.suo
+*.ipch
+*.obj
+*.idb
+*.pdb
+*.log
+*.tlog
+*.exe
+*.recipe
+*.db
+*.db-shm
+*.ilk
+*.opendb
