@@ -136,7 +136,7 @@ bool	GenerateWindow(WNDCLASSEX& wcex)
 	ZeroMemory(&wcex, sizeof(WNDCLASSEX));
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS | CS_OWNDC;
-	wcex.hbrBackground = NULL;
+	wcex.hbrBackground = CreateSolidBrush(RGB(100, 100, 100));
 	wcex.hCursor = (HCURSOR)LoadCursor(NULL, IDC_ARROW);
 	wcex.hIcon = NULL;
 	wcex.hInstance = d_hInstance;

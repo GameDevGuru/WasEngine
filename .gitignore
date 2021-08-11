@@ -15,3 +15,4 @@
 *.opendb
 *.db-wal
 *.db-wal
+.vs/WasEngine/v16/Browse.VC.db-wal
