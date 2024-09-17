@@ -92,6 +92,7 @@ LRESULT CALLBACK WinProc(
 		{
 			SetConsoleTextAttribute(hConsoleOut, RED | INTENSIFY);
 			printf("Input Error! Error creating the input devices.\n");
+			printf("Github test");
 		}
 		else
 		{
