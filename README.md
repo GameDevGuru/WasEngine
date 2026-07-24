@@ -1,4 +1,4 @@
-# WasEngine
+# WaspEngine
 Game engine and tech demos.
 
 A small native Win32 + OpenGL application/engine prototype, built with C++ and MSVC.
@@ -6,7 +6,7 @@ A small native Win32 + OpenGL application/engine prototype, built with C++ and M
 ## What it does
 
 - Creates a Win32 window and runs a real-time game loop (`Input` → `Update` → `Render`) driven by `QueryPerformanceCounter`-based delta time.
-- Renders a rotating, colored 3D pyramid using a hand-rolled OpenGL 3.3 core-profile renderer (no external GL loader or math library — see [`WasEngine/Renderer.h`](WasEngine/Renderer.h) / [`WasEngine/Renderer.cpp`](WasEngine/Renderer.cpp)).
+- Renders a rotating, colored 3D pyramid using a hand-rolled OpenGL 3.3 core-profile renderer (no external GL loader or math library — see [`WaspEngine/Renderer.h`](WaspEngine/Renderer.h) / [`WaspEngine/Renderer.cpp`](WaspEngine/Renderer.cpp)).
 - Supports moving the pyramid with the arrow keys.
 - Opens a console window alongside the main window for diagnostic logging (window/HWND/input device creation status).
 
@@ -20,7 +20,7 @@ A small native Win32 + OpenGL application/engine prototype, built with C++ and M
 
 ### From Visual Studio
 
-Open `WasEngine.sln` and build (`Ctrl+Shift+B`).
+Open `WaspEngine.sln` and build (`Ctrl+Shift+B`).
 
 ### From the command line
 
@@ -38,10 +38,10 @@ make stop             # stop a running instance
 Or directly with MSBuild (requires a Developer PowerShell/Command Prompt, or `msbuild.exe` on PATH):
 
 ```powershell
-msbuild WasEngine.sln /p:Configuration=Debug /p:Platform=x64
+msbuild WaspEngine.sln /p:Configuration=Debug /p:Platform=x64
 ```
 
-The built executable lands at `x64\<Configuration>\WasEngine.exe`.
+The built executable lands at `x64\<Configuration>\WaspEngine.exe`.
 
 ## Controls
 
@@ -56,12 +56,12 @@ Every push and pull request to `main` triggers the [Build workflow](.github/work
 ## Project structure
 
 ```
-WasEngine.sln                   Solution file
-WasEngine/
+WaspEngine.sln                   Solution file
+WaspEngine/
   main.cpp                      WinMain, window creation, game loop, WinProc
   Renderer.h / Renderer.cpp      OpenGL 3.3 renderer (context, shaders, pyramid geometry)
   stdafx.h / stdafx.cpp          Precompiled header stub
-  WasEngine.vcxproj              Project file
+  WaspEngine.vcxproj              Project file
 Makefile                         Local build/run/clean commands
 .github/workflows/build.yml      CI build workflow
 CONTRIBUTING.md                  Branching/PR conventions

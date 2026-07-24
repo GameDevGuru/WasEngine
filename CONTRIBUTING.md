@@ -1,4 +1,4 @@
-# Contributing to WasEngine
+# Contributing to WaspEngine
 
 This project uses a simple feature-branch + pull request workflow so every
 change is built by CI (GitHub Actions) before it lands on `main`.
@@ -29,7 +29,7 @@ Create a new branch off `main` for every change, using one of these prefixes:
    ```
    or, without `make`:
    ```powershell
-   msbuild WasEngine.sln /p:Configuration=Debug /p:Platform=x64
+   msbuild WaspEngine.sln /p:Configuration=Debug /p:Platform=x64
    ```
 4. Push the branch and open a pull request into `main`:
    ```powershell

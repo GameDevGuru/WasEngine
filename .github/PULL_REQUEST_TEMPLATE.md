@@ -11,7 +11,7 @@
 
 ## Checklist
 
-- [ ] Built locally (`make build` or `msbuild WasEngine.sln ...`) with no errors
+- [ ] Built locally (`make build` or `msbuild WaspEngine.sln ...`) with no errors
 - [ ] Verified the app still launches and behaves as expected
 - [ ] Branch is up to date with `main`
 - [ ] No unrelated changes included

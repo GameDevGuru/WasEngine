@@ -1,4 +1,4 @@
-# Makefile for WasEngine
+# Makefile for WaspEngine
 #
 # Wraps MSBuild so the solution can be built, run, and cleaned from a
 # terminal (PowerShell) without opening Visual Studio.
@@ -9,11 +9,11 @@
 #   - override MSBUILD below with the full path to MSBuild.exe, e.g.:
 #       make build MSBUILD="C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/MSBuild.exe"
 
-SOLUTION      := WasEngine.sln
+SOLUTION      := WaspEngine.sln
 CONFIGURATION ?= Debug
 PLATFORM      ?= x64
 MSBUILD       ?= msbuild.exe
-EXE           := x64/$(CONFIGURATION)/WasEngine.exe
+EXE           := x64/$(CONFIGURATION)/WaspEngine.exe
 
 .PHONY: all build rebuild clean run stop
 
@@ -37,4 +37,4 @@ run: build
 
 ## Stop a running instance of the app
 stop:
-	powershell -NoProfile -Command "Stop-Process -Name WasEngine -Force -ErrorAction SilentlyContinue"
+	powershell -NoProfile -Command "Stop-Process -Name WaspEngine -Force -ErrorAction SilentlyContinue"
