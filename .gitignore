@@ -1,6 +1,5 @@
 
-.vs/WasEngine/v16/ipch/AutoPCH/9ef6f6dc204496a0/STDAFX.ipch
-.vs/WasEngine/v16/.suo
+.vs/
 *.ipch
 *.obj
 *.idb
@@ -14,5 +13,5 @@
 *.ilk
 *.opendb
 *.db-wal
-*.db-wal
-.vs/WasEngine/v16/Browse.VC.db-wal
+x64/
+Win32/

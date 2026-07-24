@@ -3,16 +3,20 @@
 //
 //************************************************************************
 #include "stdafx.h"
+#include "Renderer.h"
 
-HINSTANCE d_hInstance = NULL;
-HWND d_hWND = NULL;
+HINSTANCE d_hInstance = nullptr;
+HWND d_hWND = nullptr;
 HANDLE hConsoleOut;
 HANDLE hConsoleIn;
+
+Renderer g_renderer;
 
 enum Color { BLUE = 1, GREEN = 2, RED = 4, YELLOW = 6, INTENSIFY = 8, DEFAULT = 7 };
 
 #pragma region Forward Declarations
 LRESULT CALLBACK WinProc(
+	_In_  HWND hwnd,
 	_In_  UINT uMsg,
 	_In_  WPARAM wParam,
 	_In_  LPARAM lParam
@@ -21,6 +25,10 @@ LRESULT CALLBACK WinProc(
 bool	GenerateConsole();
 bool	GenerateWindow(WNDCLASSEX& wcex);
 bool	GenerateHWND(LPCWSTR szClassName);
+
+void	Input();
+void	Update(float deltaTime);
+void	Render();
 #pragma endregion
 
 int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
@@ -48,15 +56,43 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	ShowWindow(d_hWND, SW_SHOW);
 	UpdateWindow(d_hWND);
 
+	if (!g_renderer.Init(d_hWND))
+	{
+		SetConsoleTextAttribute(hConsoleOut, RED | INTENSIFY);
+		printf("Renderer Error! Failed to initialize the OpenGL renderer.\n");
+		SetConsoleTextAttribute(hConsoleOut, DEFAULT);
+		return -1;
+	}
+
+	LARGE_INTEGER frequency;
+	LARGE_INTEGER lastTime;
+	QueryPerformanceFrequency(&frequency);
+	QueryPerformanceCounter(&lastTime);
+
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG));
 	while (msg.message != WM_QUIT)
 	{
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		// Drain all pending Windows messages without blocking so the loop can keep rendering.
+		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+
+		if (msg.message == WM_QUIT)
+		{
+			break;
+		}
+
+		LARGE_INTEGER currentTime;
+		QueryPerformanceCounter(&currentTime);
+		float deltaTime = static_cast<float>(currentTime.QuadPart - lastTime.QuadPart) / static_cast<float>(frequency.QuadPart);
+		lastTime = currentTime;
+
+		Input();
+		Update(deltaTime);
+		Render();
 	}
 
 	return (int)msg.wParam;
@@ -78,13 +114,13 @@ LRESULT CALLBACK WinProc(
 
 		// RAW Keyboard input
 		inputDevices[0].dwFlags = 0;
-		inputDevices[0].hwndTarget = NULL;
+		inputDevices[0].hwndTarget = nullptr;
 		inputDevices[0].usUsage = 6;
 		inputDevices[0].usUsagePage = 1;
 
 		// RAW Mouse Input
 		inputDevices[1].dwFlags = 0;
-		inputDevices[1].hwndTarget = NULL;
+		inputDevices[1].hwndTarget = nullptr;
 		inputDevices[1].usUsage = 2;
 		inputDevices[1].usUsagePage = 1;
 
@@ -103,7 +139,7 @@ LRESULT CALLBACK WinProc(
 	break;
 	case WM_SIZE:
 	{
-
+		g_renderer.Resize(LOWORD(lParam), HIWORD(lParam));
 	}
 	break;
 	case WM_MOUSEMOVE:
@@ -120,6 +156,7 @@ LRESULT CALLBACK WinProc(
 	case WM_DESTROY:
 	{
 		// close the application entirely
+		g_renderer.Shutdown();
 		FreeConsole();
 		PostQuitMessage(0);
 		return 0;
@@ -137,14 +174,14 @@ bool	GenerateWindow(WNDCLASSEX& wcex)
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS | CS_OWNDC;
 	wcex.hbrBackground = CreateSolidBrush(RGB(100, 100, 100));
-	wcex.hCursor = (HCURSOR)LoadCursor(NULL, IDC_ARROW);
-	wcex.hIcon = NULL;
+	wcex.hCursor = (HCURSOR)LoadCursor(nullptr, IDC_ARROW);
+	wcex.hIcon = nullptr;
 	wcex.hInstance = d_hInstance;
-	wcex.hIconSm = NULL;
-	wcex.lpfnWndProc = (WNDPROC)WinProc;
+	wcex.hIconSm = nullptr;
+	wcex.lpfnWndProc = WinProc;
 	wcex.lpszClassName = TEXT("DEngine");
-	wcex.cbWndExtra = NULL;
-	wcex.lpszMenuName = NULL;
+	wcex.cbWndExtra = 0;
+	wcex.lpszMenuName = nullptr;
 
 	if (!RegisterClassEx(&wcex))
 	{
@@ -167,7 +204,7 @@ bool	GenerateHWND(LPCWSTR szClassName)
 {
 	UINT winStyle, winStyleX;
 	winStyle = WS_OVERLAPPEDWINDOW;
-	winStyleX = NULL;
+	winStyleX = 0;
 
 	RECT	window_size = { 0, 0, 800, 600 };
 	if (!AdjustWindowRect(&window_size, winStyle, false))
@@ -180,7 +217,7 @@ bool	GenerateHWND(LPCWSTR szClassName)
 		CW_USEDEFAULT, CW_USEDEFAULT,
 		window_size.right - window_size.left,
 		window_size.bottom - window_size.top,
-		NULL, NULL, d_hInstance, NULL);
+		nullptr, nullptr, d_hInstance, nullptr);
 	if (!d_hWND)
 	{
 		SetConsoleTextAttribute(hConsoleOut, RED | INTENSIFY);
@@ -209,8 +246,8 @@ bool GenerateConsole()
 	std::cerr.clear();
 	std::cin.clear();
 
-	hConsoleOut = CreateFile(_T("CONOUT$"), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	hConsoleIn = CreateFile(_T("CONIN$"), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	hConsoleOut = CreateFile(_T("CONOUT$"), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+	hConsoleIn = CreateFile(_T("CONIN$"), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 	SetStdHandle(STD_OUTPUT_HANDLE, hConsoleOut);
 	SetStdHandle(STD_ERROR_HANDLE, hConsoleOut);
 	SetStdHandle(STD_INPUT_HANDLE, hConsoleIn);
@@ -222,4 +259,25 @@ bool GenerateConsole()
 	SetConsoleTitle(L"Debugger");
 
 	return true;
+}
+
+void Input()
+{
+	// Poll arrow-key state and forward it to the renderer for movement.
+	bool left = (GetAsyncKeyState(VK_LEFT) & 0x8000) != 0;
+	bool right = (GetAsyncKeyState(VK_RIGHT) & 0x8000) != 0;
+	bool up = (GetAsyncKeyState(VK_UP) & 0x8000) != 0;
+	bool down = (GetAsyncKeyState(VK_DOWN) & 0x8000) != 0;
+
+	g_renderer.SetMoveInput(left, right, up, down);
+}
+
+void Update(float deltaTime)
+{
+	g_renderer.Update(deltaTime);
+}
+
+void Render()
+{
+	g_renderer.Render();
 }
