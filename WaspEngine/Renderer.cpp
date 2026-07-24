@@ -8,6 +8,9 @@
 #include <gl/GL.h>
 #include <cmath>
 #include <cstdio>
+#include <fstream>
+#include <sstream>
+#include <string>
 
 #pragma comment(lib, "opengl32.lib")
 
@@ -155,26 +158,28 @@ namespace
 		out[10] = c;
 	}
 
-	const char* VertexShaderSource =
-		"#version 330 core\n"
-		"layout(location = 0) in vec3 aPos;\n"
-		"layout(location = 1) in vec3 aColor;\n"
-		"uniform mat4 uMVP;\n"
-		"out vec3 vColor;\n"
-		"void main()\n"
-		"{\n"
-		"    gl_Position = uMVP * vec4(aPos, 1.0);\n"
-		"    vColor = aColor;\n"
-		"}\n";
+	const char* VertexShaderPath = "Shaders\\Basic.vert.glsl";
+	const char* FragmentShaderPath = "Shaders\\Basic.frag.glsl";
 
-	const char* FragmentShaderSource =
-		"#version 330 core\n"
-		"in vec3 vColor;\n"
-		"out vec4 FragColor;\n"
-		"void main()\n"
-		"{\n"
-		"    FragColor = vec4(vColor, 1.0);\n"
-		"}\n";
+	//-----------------------------------------------------------------------
+	// Reads an entire text file (used for loading .glsl shader sources) into
+	// a std::string. Returns an empty string on failure.
+	//-----------------------------------------------------------------------
+	std::string LoadShaderSourceFromFile(const char* filePath)
+	{
+		std::ifstream file(filePath, std::ios::in | std::ios::binary);
+		if (!file)
+		{
+			OutputDebugStringA("Failed to open shader file: ");
+			OutputDebugStringA(filePath);
+			OutputDebugStringA("\n");
+			return std::string();
+		}
+
+		std::ostringstream contents;
+		contents << file.rdbuf();
+		return contents.str();
+	}
 }
 
 Renderer::Renderer()
@@ -332,8 +337,18 @@ bool Renderer::LoadGLExtensions()
 
 bool Renderer::CompileShaders()
 {
+	std::string vertexSource = LoadShaderSourceFromFile(VertexShaderPath);
+	std::string fragmentSource = LoadShaderSourceFromFile(FragmentShaderPath);
+	if (vertexSource.empty() || fragmentSource.empty())
+	{
+		return false;
+	}
+
+	const char* vertexSourcePtr = vertexSource.c_str();
+	const char* fragmentSourcePtr = fragmentSource.c_str();
+
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &VertexShaderSource, nullptr);
+	glShaderSource(vertexShader, 1, &vertexSourcePtr, nullptr);
 	glCompileShader(vertexShader);
 
 	GLint success = 0;
@@ -349,7 +364,7 @@ bool Renderer::CompileShaders()
 	}
 
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &FragmentShaderSource, nullptr);
+	glShaderSource(fragmentShader, 1, &fragmentSourcePtr, nullptr);
 	glCompileShader(fragmentShader);
 
 	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);

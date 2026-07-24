@@ -149,6 +149,16 @@
     </ClInclude>
     <ClInclude Include="Renderer.h" />
   </ItemGroup>
+  <ItemGroup>
+	<None Include="Shaders\Basic.vert.glsl" />
+	<None Include="Shaders\Basic.frag.glsl" />
+  </ItemGroup>
+  <Target Name="CopyShaders" AfterTargets="Build">
+	<ItemGroup>
+	  <ShaderFiles Include="$(ProjectDir)Shaders\**\*.glsl" />
+	</ItemGroup>
+	<Copy SourceFiles="@(ShaderFiles)" DestinationFolder="$(OutDir)Shaders\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
