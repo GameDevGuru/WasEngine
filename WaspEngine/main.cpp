@@ -4,6 +4,9 @@
 //************************************************************************
 #include "stdafx.h"
 #include "Renderer.h"
+#include "WaspLogger.h"
+
+using namespace WaspLogger;
 
 HINSTANCE d_hInstance = nullptr;
 HWND d_hWND = nullptr;
@@ -11,8 +14,6 @@ HANDLE hConsoleOut;
 HANDLE hConsoleIn;
 
 Renderer g_renderer;
-
-enum Color { BLUE = 1, GREEN = 2, RED = 4, YELLOW = 6, INTENSIFY = 8, DEFAULT = 7 };
 
 #pragma region Forward Declarations
 LRESULT CALLBACK WinProc(
@@ -58,9 +59,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 	if (!g_renderer.Init(d_hWND))
 	{
-		SetConsoleTextAttribute(hConsoleOut, RED | INTENSIFY);
-		printf("Renderer Error! Failed to initialize the OpenGL renderer.\n");
-		SetConsoleTextAttribute(hConsoleOut, DEFAULT);
+		LogError("Renderer Error! Failed to initialize the OpenGL renderer.");
 		return -1;
 	}
 
@@ -126,15 +125,12 @@ LRESULT CALLBACK WinProc(
 
 		if (!RegisterRawInputDevices(inputDevices, 2, sizeof(RAWINPUTDEVICE)))
 		{
-			SetConsoleTextAttribute(hConsoleOut, RED | INTENSIFY);
-			printf("Input Error! Error creating the input devices.\n");
+			LogError("Input Error! Error creating the input devices.");
 		}
 		else
 		{
-			SetConsoleTextAttribute(hConsoleOut, GREEN | INTENSIFY);
-			printf("Success! Registered the input devices.\n");
+			LogInformation("Success! Registered the input devices.");
 		}
-		SetConsoleTextAttribute(hConsoleOut, DEFAULT);
 	}
 	break;
 	case WM_SIZE:
@@ -179,22 +175,18 @@ bool	GenerateWindow(WNDCLASSEX& wcex)
 	wcex.hInstance = d_hInstance;
 	wcex.hIconSm = nullptr;
 	wcex.lpfnWndProc = WinProc;
-	wcex.lpszClassName = TEXT("DEngine");
+	wcex.lpszClassName = TEXT("WaspEngine");
 	wcex.cbWndExtra = 0;
 	wcex.lpszMenuName = nullptr;
 
 	if (!RegisterClassEx(&wcex))
 	{
-		SetConsoleTextAttribute(hConsoleOut, RED | INTENSIFY);
-		printf("Error 1 Window class was not created correctly!\n");
-		SetConsoleTextAttribute(hConsoleOut, DEFAULT);
+		LogError("Error 1 Window class was not created correctly!");
 		return false;
 	}
 	else
 	{
-		SetConsoleTextAttribute(hConsoleOut, GREEN | INTENSIFY);
-		printf("Success! Generated the window class\n");
-		SetConsoleTextAttribute(hConsoleOut, DEFAULT);
+		LogInformation("Success! Generated the window class");
 		return true;
 	}
 
@@ -213,23 +205,19 @@ bool	GenerateHWND(LPCWSTR szClassName)
 		return false;
 	}
 
-	d_hWND = CreateWindowEx(winStyleX, szClassName, L"DEngine Main", winStyle,
+	d_hWND = CreateWindowEx(winStyleX, szClassName, L"Wasp Engine Main", winStyle,
 		CW_USEDEFAULT, CW_USEDEFAULT,
 		window_size.right - window_size.left,
 		window_size.bottom - window_size.top,
 		nullptr, nullptr, d_hInstance, nullptr);
 	if (!d_hWND)
 	{
-		SetConsoleTextAttribute(hConsoleOut, RED | INTENSIFY);
-		printf("HWND Error! HWND is null. Failed to create the HWND.\n");
-		SetConsoleTextAttribute(hConsoleOut, DEFAULT);
+		LogError("HWND Error! HWND is null. Failed to create the HWND.");
 		return false;
 	}
 	else
 	{
-		SetConsoleTextAttribute(hConsoleOut, GREEN | INTENSIFY);
-		printf("Success Generated the HWND.\n");
-		SetConsoleTextAttribute(hConsoleOut, DEFAULT);
+		LogInformation("Success Generated the HWND.");
 		return true;
 	}
 }
@@ -251,6 +239,15 @@ bool GenerateConsole()
 	SetStdHandle(STD_OUTPUT_HANDLE, hConsoleOut);
 	SetStdHandle(STD_ERROR_HANDLE, hConsoleOut);
 	SetStdHandle(STD_INPUT_HANDLE, hConsoleIn);
+
+	// Enable ANSI/VT100 escape sequence processing so the \033[...m color
+	// codes used by LogInformation/LogWarning/LogError/LogDebug actually
+	// change the text color instead of being printed as raw control chars.
+	DWORD consoleMode = 0;
+	if (GetConsoleMode(hConsoleOut, &consoleMode))
+	{
+		SetConsoleMode(hConsoleOut, consoleMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+	}
 	std::wcout.clear();
 	std::wclog.clear();
 	std::wcerr.clear();
@@ -264,10 +261,33 @@ bool GenerateConsole()
 void Input()
 {
 	// Poll arrow-key state and forward it to the renderer for movement.
+	if ((GetAsyncKeyState(VK_ESCAPE) & 0x8000) != 0)
+	{
+		LogInformation("Escape key pressed. Closing the application.");
+		PostMessage(d_hWND, WM_CLOSE, 0, 0);
+	}
+
 	bool left = (GetAsyncKeyState(VK_LEFT) & 0x8000) != 0;
 	bool right = (GetAsyncKeyState(VK_RIGHT) & 0x8000) != 0;
 	bool up = (GetAsyncKeyState(VK_UP) & 0x8000) != 0;
 	bool down = (GetAsyncKeyState(VK_DOWN) & 0x8000) != 0;
+
+	if (left)
+	{
+		LogInformation("Left arrow key pressed.");
+	}
+	if (right)
+	{
+		LogInformation("Right arrow key pressed.");
+	}
+	if (up)
+	{
+		LogInformation("Up arrow key pressed.");
+	}
+	if (down)
+	{
+		LogInformation("Down arrow key pressed.");
+	}
 
 	g_renderer.SetMoveInput(left, right, up, down);
 }
